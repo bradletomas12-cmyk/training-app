@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Training OS">
+<meta name="theme-color" content="#1a1a1a">
+<title>Training OS — Half Ironman Plan</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#f5f5f3;--surface:#fff;--surface2:#f0efea;
+  --text:#1a1a1a;--text2:#555;--text3:#888;
+  --border:#e0e0d8;--radius:12px;
+  --run:#3B6D11;--run-bg:#EAF3DE;
+  --swim:#185FA5;--swim-bg:#E6F1FB;
+  --bike:#854F0B;--bike-bg:#FAEEDA;
+  --brick:#993556;--brick-bg:#FBEAF0;
+  --gym:#3C3489;--gym-bg:#EEEDFE;
+  --rehab:#085041;--rehab-bg:#E1F5EE;
+  --rest:#444441;--rest-bg:#F1EFE8;
+  --race:#993C1D;--race-bg:#F0997B;
+  --accent:#1a1a1a;
+}
+html,body{height:100%;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;color:var(--text);overflow:hidden}
+#app{display:flex;flex-direction:column;height:100%;max-width:430px;margin:0 auto}
+
+/* TOP BAR */
+.topbar{background:var(--surface);border-bottom:0.5px solid var(--border);padding:12px 16px 10px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;padding-top:env(safe-area-inset-top,12px)}
+.topbar h1{font-size:17px;font-weight:600;letter-spacing:-.3px}
+.topbar .sub{font-size:11px;color:var(--text3);margin-top:1px}
+.topbar .badge{background:var(--accent);color:#fff;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px}
+
+/* WEEK TABS */
+.week-tabs{display:flex;gap:6px;overflow-x:auto;padding:10px 16px;background:var(--surface);border-bottom:0.5px solid var(--border);flex-shrink:0;scrollbar-width:none}
+.week-tabs::-webkit-scrollbar{display:none}
+.wtab{flex-shrink:0;font-size:12px;padding:5px 12px;border-radius:20px;border:0.5px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;font-family:inherit}
+.wtab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* SCROLL AREA */
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 16px 100px}
+
+/* WEEK HEADER */
+.wk-header{border-radius:10px;padding:10px 14px;margin-bottom:10px}
+.wk-header h2{font-size:14px;font-weight:600;color:#fff}
+.wk-header p{font-size:11px;color:rgba(255,255,255,.8);margin-top:2px;line-height:1.5}
+
+/* DAY CARD */
+.day-card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius);margin-bottom:8px;overflow:hidden}
+.day-hdr{display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;user-select:none}
+.day-tag{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:3px 8px;border-radius:20px;flex-shrink:0}
+.day-info{flex:1}
+.day-name{font-size:13px;font-weight:600}
+.day-subtitle{font-size:11px;color:var(--text3);margin-top:1px}
+.day-check{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}
+.day-check.done{background:#1D9E75;border-color:#1D9E75}
+.day-check svg{display:none}
+.day-check.done svg{display:block}
+.day-chevron{font-size:12px;color:var(--text3);transition:transform .2s;flex-shrink:0}
+.day-chevron.open{transform:rotate(180deg)}
+
+/* DAY BODY */
+.day-body{display:none;padding:0 14px 12px;border-top:0.5px solid var(--border)}
+.day-body.open{display:block}
+.section-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin:10px 0 5px}
+.line{font-size:12px;line-height:1.6;color:var(--text2);padding:2px 0}
+.ex-item{font-size:11.5px;line-height:1.6;color:var(--text2);padding:2px 0 2px 12px;position:relative}
+.ex-item:before{content:"·";position:absolute;left:2px;color:var(--text3)}
+
+/* NOTES */
+.notes-area{width:100%;margin-top:10px;padding:8px 10px;border:0.5px solid var(--border);border-radius:8px;font-size:12px;font-family:inherit;color:var(--text);background:var(--surface2);resize:none;min-height:60px;outline:none}
+.notes-area:focus{border-color:#1D9E75}
+.save-btn{display:block;width:100%;margin-top:6px;padding:8px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;text-align:center}
+.saved-hint{font-size:10px;color:#1D9E75;text-align:center;margin-top:4px;height:14px}
+
+/* BOTTOM NAV */
+.bottomnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--surface);border-top:0.5px solid var(--border);display:flex;padding-bottom:env(safe-area-inset-bottom,0);z-index:100}
+.bnav-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 0;cursor:pointer;gap:3px}
+.bnav-icon{font-size:22px}
+.bnav-label{font-size:10px;color:var(--text3)}
+.bnav-item.active .bnav-label{color:var(--accent);font-weight:600}
+
+/* PROGRESS VIEW */
+.prog-card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:10px}
+.prog-title{font-size:13px;font-weight:600;margin-bottom:8px}
+.prog-bar-wrap{background:var(--surface2);border-radius:20px;height:8px;margin-bottom:4px;overflow:hidden}
+.prog-bar{height:100%;border-radius:20px;background:#1D9E75;transition:width .5s}
+.prog-meta{display:flex;justify-content:space-between;font-size:11px;color:var(--text3)}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.stat-box{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius);padding:12px}
+.stat-val{font-size:24px;font-weight:600}
+.stat-lbl{font-size:11px;color:var(--text3);margin-top:2px}
+
+/* NOTES VIEW */
+.note-entry{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:8px}
+.note-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.note-day{font-size:12px;font-weight:600}
+.note-date{font-size:10px;color:var(--text3)}
+.note-text{font-size:12px;color:var(--text2);line-height:1.6}
+.empty-state{text-align:center;padding:40px 20px;color:var(--text3);font-size:13px;line-height:1.6}
+
+/* COLORS */
+.tag-run{background:var(--run-bg);color:var(--run)}
+.tag-swim{background:var(--swim-bg);color:var(--swim)}
+.tag-bike{background:var(--bike-bg);color:var(--bike)}
+.tag-brick{background:var(--brick-bg);color:var(--brick)}
+.tag-gym{background:var(--gym-bg);color:var(--gym)}
+.tag-rehab{background:var(--rehab-bg);color:var(--rehab)}
+.tag-rest{background:var(--rest-bg);color:var(--rest)}
+.tag-race{background:var(--race-bg);color:var(--race)}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="topbar">
+    <div>
+      <h1>Training OS</h1>
+      <div class="sub">Half Ironman · Aug 16</div>
+    </div>
+    <div class="badge" id="progress-badge">0%</div>
+  </div>
+
+  <!-- PLAN VIEW -->
+  <div id="view-plan" style="display:flex;flex-direction:column;flex:1;overflow:hidden">
+    <div class="week-tabs" id="week-tabs"></div>
+    <div class="scroll" id="day-list"></div>
+  </div>
+
+  <!-- PROGRESS VIEW -->
+  <div id="view-progress" style="display:none;flex-direction:column;flex:1;overflow:hidden">
+    <div class="scroll">
+      <div class="stat-grid" id="stat-grid"></div>
+      <div id="prog-weeks"></div>
+    </div>
+  </div>
+
+  <!-- NOTES VIEW -->
+  <div id="view-notes" style="display:none;flex-direction:column;flex:1;overflow:hidden">
+    <div class="scroll" id="notes-list"></div>
+  </div>
+
+  <nav class="bottomnav">
+    <div class="bnav-item active" onclick="switchView('plan',this)" id="nav-plan">
+      <div class="bnav-icon">📋</div>
+      <div class="bnav-label">Plan</div>
+    </div>
+    <div class="bnav-item" onclick="switchView('progress',this)" id="nav-progress">
+      <div class="bnav-icon">📈</div>
+      <div class="bnav-label">Progress</div>
+    </div>
+    <div class="bnav-item" onclick="switchView('notes',this)" id="nav-notes">
+      <div class="bnav-icon">📝</div>
+      <div class="bnav-label">Notes</div>
+    </div>
+  </nav>
+</div>
+
+<script>
+const HIP=['90/90 hip stretch — 2 min each side','Pigeon stretch — 2 min each side','Hip flexor couch stretch — 90s each side','Clamshells with band — 3x20 each side','Side-lying hip abduction — 3x15 each side',"World's greatest stretch — 5 reps each side"];
+const TUE_A=['Warm-up: 5 min bike/row + band pull-aparts','Weighted pull-up — 4x5 +10-15kg explosive, 2.5 min','Barbell bent-over row — 4x6 @75-80%, 2.5 min','Seated cable row (wide) — 4x8, 2 min','DB single-arm row — 3x10 each, 90s','Overhead press — 4x6 explosive, 2 min','Lateral raise + rear delt fly superset — 3x12, 60s','Face pull (cable) — 3x15, 60s [never skip]','Cool-down: pigeon + hip flexor stretch'];
+const TUE_B=['Warm-up: 5 min + band pull-aparts','Weighted pull-up — 3x4 +15-20kg, 3 min','Barbell bent-over row — 3x5 heavy, 3 min','Seated cable row — 3x6 heavy, 2 min','DB single-arm row — 3x6 each heavy, 2 min','Overhead press — 3x5, 2.5 min','Lateral raise + rear delt fly — 3x12, 60s','Face pull — 3x15','Cool-down: hip mobility 10 min'];
+const TUE_TAP=['Pull-up — 2x8 BW, 2 min','Seated cable row — 2x12 light, 90s','Overhead press — 2x10 light, 90s','Lateral raise — 2x12, 60s','Face pull — 3x15 [always]','Cool-down: full hip mobility 15 min'];
+const WED_A=['Warm-up: 5 min + inchworm x5','Pallof press (cable) — 3x10 each side, 60s','Dead bug — 3x8 each side, 60s','Copenhagen adductor plank — 3x20s each [hip rehab]','Bird dog — 3x10 each side, 60s [hip rehab]','Clamshells with band — 3x20 each [hip rehab]','Side-lying hip abduction — 3x15 each [hip rehab]','Face pull — 3x15, 60s','Cool-down: 90/90 + pigeon 2 min each'];
+const WED_B=['Warm-up: 5 min','Pallof press — 3x10 each side, 60s','Dead bug — 3x8 each (+2kg)','Copenhagen plank — 3x25s each side','Bird dog — 3x10 each side','Clamshells — 3x20 each (heavier band)','Side-lying hip abduction — 3x15 each','Face pull — 3x15','Cool-down: full hip mobility 15 min'];
+const WED_TAP=['Pallof press — 2x10 each side','Dead bug — 2x8 each','Clamshells — 2x20 each','Bird dog — 2x10 each','Face pull — 3x15','Cool-down: hip mobility 15 min'];
+const FRI_A=['Warm-up: 10 min full protocol','Hip thrust BW only — 3x15, 2s hold at top [therapeutic]','Nordic hamstring curl — 3x5 eccentric slow, 2.5 min','Single-leg calf raise — 3x15 each, 90s','Barbell bent-over row — 4x6, 2 min','DB step-up (no weight) — 3x10 each, 90s','Plank shoulder tap — 3x10 each arm, 60s','Lateral band walk — 2x15 each direction, 60s','Face pull — 3x15','Cool-down: FULL hip mobility 20 min'];
+const FRI_B=['Warm-up: 10 min','Trap bar deadlift — 3x5 @75% controlled, 2.5 min','Hip thrust — 4x8 light-moderate, 2 min','Nordic hamstring curl — 3x5 eccentric, 2.5 min','DB step-up + knee drive — 3x8 each, 2 min','Single-leg calf raise — 3x15 each, 90s','Plank shoulder tap — 3x10 each, 60s','Lateral band walk — 2x15 each direction','Face pull — 3x15','Cool-down: hip mobility 15 min'];
+const FRI_C=['Warm-up: 10 min','Hang power clean — 3x3 @70%, 3 min','Trap bar deadlift — 3x3 @85%, 3 min','Hip thrust — 3x6 loaded, 2 min','Nordic hamstring curl — 3x4, 2 min','DB step-up + knee drive — 3x6 explosive each, 2 min','Plank shoulder tap — 3x10 each','Lateral band walk — 2x15 each direction','Face pull — 3x15','Cool-down: hip mobility 15 min'];
+const FRI_TAP=['Warm-up: 8 min easy','Trap bar deadlift — 2x8 @60%, 2 min','Hip thrust — 2x12 BW, 90s','Nordic hamstring curl — 2x5, 2 min','DB step-up — 2x10 BW each, 90s','Plank shoulder tap — 2x10 each','Lateral band walk — 2x15','Face pull — 3x15','Cool-down: FULL hip mobility 20 min'];
+const GYM_LAST=['Trap bar deadlift — 2x8 @60%','Hip thrust — 2x12 BW','Nordic hamstring curl — 2x5','DB step-up — 2x10 BW each','Face pull — 3x15 [FINAL GYM SESSION]','Hip mobility — FULL 20 min routine'];
+const ACT_WED14=['Pallof press — 2x10 each side light','Face pull — 3x15','Clamshells — 2x20 each','Bird dog — 2x10 each','Hip mobility — FULL routine 15 min'];
+
+const WEEKS=[
+  {id:'w10',label:'Wk 10',title:'No run — bike heavy + hip rehab',vol:'~11 hrs',color:'#085041',note:'NO RUNNING this week. Aqua jogging replaces all run sessions. Bike at full intensity. Gym: back, shoulders and hip rehab.',noteType:'warn',
+  days:[
+    {t:'rest',day:'Monday',sub:'Full rest + hip mobility',lines:['No training. 20 min hip mobility routine.'],exLbl:'Hip mobility',ex:HIP},
+    {t:'gym',day:'Tuesday',sub:'Bike AM + Gym PM',lines:['AM: 105 min bike — pyramid Z4 (5/8/10/8/5 min Z4, equal recovery)','PM: Gym — back/shoulders, NO heavy lower body'],exLbl:'Gym exercises',ex:TUE_A},
+    {t:'rehab',day:'Wednesday',sub:'Aqua jog + Swim + Gym',lines:['AM: 30 min aqua jogging (buoy belt, high knees)','Swim: 2,000m — 300 WU, 6x150m Z2-Z3, 200 CD','PM: Gym — upper/core + hip rehab'],exLbl:'Gym exercises',ex:WED_A},
+    {t:'bike',day:'Thursday',sub:'Bike only — no brick run',lines:['2 hrs bike Z3 race pace. No run this week.','Extra 20 min Z2 cool-down spin instead of run.','Nutrition practice — eat every 25 min.'],exLbl:null,ex:null},
+    {t:'gym',day:'Friday',sub:'Aqua jog AM + Gym PM',lines:['AM: 30 min aqua jogging (pool)','PM: Gym — full body, hip-safe version'],exLbl:'Gym exercises',ex:FRI_A},
+    {t:'swim',day:'Saturday',sub:'Swim + Aqua jog',lines:['2,200m — 400 WU, 10x100m Z3-Z4 (10s rest), 400 CD','+ 20 min aqua jogging after swim'],exLbl:null,ex:null},
+    {t:'swim',day:'Sunday',sub:'Swim AM + Long bike PM',lines:['AM: 2,000m open water','PM: 3:15 hrs bike (120km). Biggest ride. Fuel every 25 min.'],exLbl:null,ex:null},
+  ]},
+  {id:'w11',label:'Wk 11',title:'Walk/run returns — 20 min max',vol:'~10 hrs',color:'#0F6E56',note:'First running after injury. Three short walk/run sessions. Stop at any hip twinge above 2/10.',noteType:'warn',
+  days:[
+    {t:'rest',day:'Monday',sub:'Full rest + hip mobility',lines:['No training. 20 min hip mobility.'],exLbl:'Hip mobility',ex:HIP},
+    {t:'gym',day:'Tuesday',sub:'Bike AM + Gym PM',lines:['AM: 90 min — 3x10 min Z3 in Z2 base','PM: Gym — back/shoulders. Light lower body only.'],exLbl:'Gym exercises',ex:TUE_A},
+    {t:'rehab',day:'Wednesday',sub:'FIRST run back — walk/run',lines:['5 min walk warm-up','1 min jog / 2 min walk x5 rounds','5 min walk cool-down — total ~20 min','Flat terrain only. Stop at any hip pain.','Hip mobility immediately after.'],exLbl:null,ex:null},
+    {t:'bike',day:'Thursday',sub:'Bike + optional aqua jog',lines:['75 min Z2 easy bike.','Optional: 20 min aqua jog after if pool available.'],exLbl:null,ex:null},
+    {t:'rehab',day:'Friday',sub:'Walk/run session 2 + Gym',lines:['AM: (only if Wed pain-free)','5 min walk → 2 min jog / 2 min walk x4 → 5 min walk','PM: Gym — upper/core + hip rehab'],exLbl:'Gym exercises',ex:WED_A},
+    {t:'rehab',day:'Saturday',sub:'Walk/run session 3 + Swim',lines:['AM: (only if Fri pain-free)','5 min walk → 3 min jog / 1 min walk x4 → 5 min walk','Hip mobility between sessions.','PM: 1,600m easy swim + drills'],exLbl:null,ex:null},
+    {t:'swim',day:'Sunday',sub:'Swim AM + Easy bike PM',lines:['AM: 1,500m easy','PM: 90 min easy Z2 ride.'],exLbl:null,ex:null},
+  ]},
+  {id:'w12',label:'Wk 12',title:'Easy running returns — Z1 only',vol:'~12 hrs',color:'#3B6D11',note:'Only if Week 11 was entirely pain-free. Z1 pace only (6:30-7:00/km). No speed work. Bricks return with short easy run.',noteType:'ok',
+  days:[
+    {t:'rest',day:'Monday',sub:'Full rest + hip mobility',lines:['No training. 20 min hip mobility.'],exLbl:'Hip mobility',ex:HIP},
+    {t:'gym',day:'Tuesday',sub:'Bike AM + Gym PM',lines:['AM: 110 min — 4x12 min Z4 race pace','PM: Gym — back/shoulders'],exLbl:'Gym exercises',ex:TUE_A},
+    {t:'run',day:'Wednesday',sub:'Easy run + Gym',lines:['AM: 25 min continuous Z1 jog. Flat route.','Note any hip tightness. Hip mob after.','PM: Gym — upper/core + hip rehab'],exLbl:'Gym exercises',ex:WED_A},
+    {t:'brick',day:'Thursday',sub:'Brick — first back',lines:['2 hrs bike Z3 + 20 min easy Z1 run off bike.','First brick back. Keep run very easy.','Stop if hip twinges. Hip mobility after.'],exLbl:null,ex:null},
+    {t:'gym',day:'Friday',sub:'Easy run + Gym',lines:['AM: 30 min easy Z1-Z2.','PM: Gym — full body (trap bar returns cautiously)'],exLbl:'Gym exercises',ex:FRI_B},
+    {t:'swim',day:'Saturday',sub:'Run AM + Swim PM',lines:['AM: 25 min easy Z1 run','PM: 2,400m — 400 WU, 4x400m race pace (30s), 400 CD'],exLbl:null,ex:null},
+    {t:'swim',day:'Sunday',sub:'Swim AM + Long bike PM',lines:['AM: 2,200m open water','PM: 3:20 hrs bike (120km).'],exLbl:null,ex:null},
+  ]},
+  {id:'w13',label:'Wk 13',title:'Run to 45 min — first tempo',vol:'~13 hrs',color:'#3B6D11',note:'If pain-free for 2 full weeks, introduce one short tempo. Bricks return properly. Gym peak power phase.',noteType:'ok',
+  days:[
+    {t:'rest',day:'Monday',sub:'Full rest + hip mobility',lines:['No training. 20 min hip mobility.'],exLbl:'Hip mobility',ex:HIP},
+    {t:'gym',day:'Tuesday',sub:'Bike AM + Gym PM',lines:['AM: 115 min — 60 min race Z3 sustained. Nutrition on.','PM: Gym — back/shoulders'],exLbl:'Gym exercises',ex:TUE_A},
+    {t:'run',day:'Wednesday',sub:'Tempo run + Gym',lines:['AM: 15 WU → 2x8 min Z3 (5:20-5:40/km), 3 min walk → 10 CD','Monitor hip during tempo. Pain 3/10+ = drop to easy.','PM: Gym — upper/core + hip'],exLbl:'Gym exercises',ex:WED_B},
+    {t:'brick',day:'Thursday',sub:'Brick — key session',lines:['2 hrs bike Z3 + 35 min run.','Last 15 min at race pace (5:00-5:10/km) if hip allows.','Most important session this week. Hip mob after.'],exLbl:null,ex:null},
+    {t:'gym',day:'Friday',sub:'Easy run + Gym peak',lines:['AM: 40 min easy Z1-Z2. Recovery after Thursday.','PM: Gym — full body peak power phase'],exLbl:'Gym exercises',ex:FRI_C},
+    {t:'swim',day:'Saturday',sub:'Run AM + Swim PM',lines:['AM: 30 min easy Z2','PM: 1,900m non-stop — simulate race swim. Record time.'],exLbl:null,ex:null},
+    {t:'swim',day:'Sunday',sub:'Swim AM + Long bike PM',lines:['AM: 2,000m drills + pace','PM: 3 hrs bike. Nutrition every 25 min.'],exLbl:null,ex:null},
+  ]},
+  {id:'w14',label:'Wk 14',title:'Modified race simulation',vol:'~13.5 hrs',color:'#993556',note:'Swim full (1.9km), bike full (90km), run capped at 14km. Thursday is the biggest day. Stop run at 14km regardless.',noteType:'warn',
+  days:[
+    {t:'rest',day:'Monday',sub:'Full rest + hip mobility',lines:['No training. Hip mobility 20 min.','Prepare mentally for Thursday.'],exLbl:'Hip mobility',ex:HIP},
+    {t:'bike',day:'Tuesday',sub:'Bike only — saving legs',lines:['90 min Z2 easy. No hard efforts.','No gym today. Hip mob 15 min evening.'],exLbl:null,ex:null},
+    {t:'run',day:'Wednesday',sub:'Run + Gym activation only',lines:['AM: 45 min — 15 WU, 2x12 min Z3, 10 CD','PM: Gym activation only — no fatigue before Thursday'],exLbl:'Gym exercises',ex:ACT_WED14},
+    {t:'brick',day:'Thursday',sub:'RACE SIMULATION',lines:['1.9km swim → T1 → 90km bike → T2 → 14km run','All at race pace. STOP run at 14km — hip protection.','Practice nutrition exactly as race day.','This is your dress rehearsal.'],exLbl:null,ex:null},
+    {t:'rest',day:'Friday',sub:'Complete rest',lines:['Complete rest. Sleep. Eat well.','Hip mobility 15 min gentle only.'],exLbl:null,ex:null},
+    {t:'swim',day:'Saturday',sub:'Easy swim only',lines:['1,200m easy. No run today.'],exLbl:null,ex:null},
+    {t:'swim',day:'Sunday',sub:'Swim AM + Easy bike PM',lines:['AM: 1,500m easy','PM: 2 hrs easy recovery ride.'],exLbl:null,ex:null},
+  ]},
+  {id:'w15',label:'Wk 15',title:'Recovery — before taper',vol:'~8.5 hrs',color:'#085041',note:'All loads drop 30-40%. Hip mobility is the priority. Absorb the fitness you have built.',noteType:'ok',
+  days:[
+    {t:'rest',day:'Monday',sub:'Full rest + hip mobility',lines:['No training. 20 min hip mobility.'],exLbl:'Hip mobility',ex:HIP},
+    {t:'gym',day:'Tuesday',sub:'Bike AM + Gym activation',lines:['AM: 60 min Z1-Z2 easy spin.','PM: Gym activation — 2x10 all at 55-60% load'],exLbl:'Gym exercises',ex:TUE_TAP},
+    {t:'run',day:'Wednesday',sub:'Easy run + Gym',lines:['AM: 40 min easy Z1.','PM: Gym — upper activation + full hip mobility session'],exLbl:'Gym exercises',ex:WED_B},
+    {t:'brick',day:'Thursday',sub:'Easy brick',lines:['45 min easy bike + 20 min easy run.','Hip mobility immediately after run.'],exLbl:null,ex:null},
+    {t:'gym',day:'Friday',sub:'Easy jog + Full mobility',lines:['AM: 30 min easy jog.','PM: Full hip mobility + physio. 45 min. No heavy lifting.'],exLbl:'Hip mobility',ex:HIP},
+    {t:'swim',day:'Saturday',sub:'Easy run AM + Swim PM',lines:['AM: 35 min easy jog','PM: 1,500m easy — feel and rhythm.'],exLbl:null,ex:null},
+    {t:'swim',day:'Sunday',sub:'Swim AM + Easy ride PM',lines:['AM: 1,200m easy','PM: 75 min easy ride. Absorb everything.'],exLbl:null,ex:null},
+  ]},
+  {id:'w16',label:'Wk 16',title:'Taper begins — volume -40%',vol:'~8.5 hrs',color:'#185FA5',note:'Volume drops sharply. Intensity stays high in short bursts. Hip mobility daily.',noteType:'ok',
+  days:[
+    {t:'rest',day:'Monday',sub:'Full rest + hip mobility',lines:['No training. Hip mobility 15 min.'],exLbl:'Hip mobility',ex:HIP},
+    {t:'gym',day:'Tuesday',sub:'Bike AM + Gym activation',lines:['AM: 75 min — 3x10 min Z3-Z4 to stay sharp','PM: Gym — lower body activation only'],exLbl:'Gym exercises',ex:TUE_TAP},
+    {t:'run',day:'Wednesday',sub:'Controlled run + Gym',lines:['AM: 45 min — 20 WU, 2x10 min Z3, 15 CD','PM: Gym — upper activation + face pulls + hip mob'],exLbl:'Gym exercises',ex:WED_TAP},
+    {t:'brick',day:'Thursday',sub:'Last big brick',lines:['75 min bike Z3 + 20 min easy run Z2.','Last significant brick. Hip mobility after.'],exLbl:null,ex:null},
+    {t:'gym',day:'Friday',sub:'Easy run + Gym activation',lines:['AM: 30 min easy Z1-Z2.','PM: Gym — activation only, no fatigue'],exLbl:'Gym exercises',ex:FRI_TAP},
+    {t:'swim',day:'Saturday',sub:'Easy run AM + Swim PM',lines:['AM: 35 min easy Z2','PM: 1,900m — race pace. Feel how easy it is now.'],exLbl:null,ex:null},
+    {t:'swim',day:'Sunday',sub:'Swim AM + Easy bike PM',lines:['AM: 1,500m','PM: 2 hrs bike (70km). Easy Z2.'],exLbl:null,ex:null},
+  ]},
+  {id:'w17',label:'Wk 17',title:'Final tune-up — volume -60%',vol:'~6 hrs',color:'#185FA5',note:'Short sharp sessions only. Sluggishness is normal taper fatigue. Do not add extra sessions.',noteType:'warn',
+  days:[
+    {t:'rest',day:'Monday',sub:'Full rest + hip mobility',lines:['No training. Hip mobility 15 min.'],exLbl:'Hip mobility',ex:HIP},
+    {t:'gym',day:'Tuesday',sub:'Bike AM + Gym',lines:['AM: 55 min — 4x5 min Z4 to wake up legs','PM: Gym — minimal activation'],exLbl:'Gym exercises',ex:TUE_TAP},
+    {t:'run',day:'Wednesday',sub:'Sharp run + Final gym',lines:['AM: 35 min — 5x1km at 5K pace, full jog recovery','PM: Gym — final upper session'],exLbl:'Gym exercises',ex:WED_TAP},
+    {t:'brick',day:'Thursday',sub:'Final brick + Last gym',lines:['45 min bike + 15 min easy run.','LAST BRICK AND LAST GYM SESSION of the plan.'],exLbl:'Final gym',ex:GYM_LAST},
+    {t:'rest',day:'Friday',sub:'Very easy + strides',lines:['20 min very easy jog + 4x15s strides. That is all.','Hip mobility 15 min.'],exLbl:null,ex:null},
+    {t:'swim',day:'Saturday',sub:'Very easy run + Short swim',lines:['AM: 15 min very easy jog','PM: 1,000m easy + 4x50m race pace. Relaxed.'],exLbl:null,ex:null},
+    {t:'swim',day:'Sunday',sub:'Easy swim + Final spin',lines:['AM: 800m easy','PM: 50 min easy spin. Last training before race week.'],exLbl:null,ex:null},
+  ]},
+  {id:'w18',label:'Race week',title:'Race week — August 16th',vol:'~2 hrs + RACE',color:'#993C1D',note:'NO GYM this week. No fatigue. No soreness. Hip mobility 10-15 min daily, gentle. You are ready.',noteType:'warn',
+  days:[
+    {t:'rest',day:'Monday',sub:'Full rest',lines:['No training.','Hip mobility 10 min gentle.'],exLbl:null,ex:null},
+    {t:'bike',day:'Tuesday',sub:'Short bike activation',lines:['25 min easy + 3x1 min race effort to fire muscles.'],exLbl:null,ex:null},
+    {t:'run',day:'Wednesday',sub:'Very short run',lines:['20 min very easy + 3 strides.','Hip should feel completely fine.'],exLbl:null,ex:null},
+    {t:'rest',day:'Thursday',sub:'Rest / Travel',lines:['Rest or travel. Optional 15 min easy spin on arrival.','Hip mobility 10 min gentle.'],exLbl:null,ex:null},
+    {t:'swim',day:'Friday',sub:'Venue prep + Swim',lines:['15 min easy jog at race venue.','15 min swim in race water.','Walk T1/T2. Check all gear. Sleep by 9pm.'],exLbl:null,ex:null},
+    {t:'rest',day:'Saturday',sub:'Race preparation',lines:['Bike racking. Walk transition zones.','Eat well — familiar foods only.','Hip mobility 10 min. Sleep by 9pm.'],exLbl:null,ex:null},
+    {t:'race',day:'Sunday — RACE DAY',sub:'August 16th 🏊🚴🏃',lines:['Leg swings + hip circles before water entry.','Swim 1.9km → Bike 90km → Run 21km.','Run: start easy — hip loosens by km 3.','Walk every aid station. You are ready.'],exLbl:null,ex:null},
+  ]},
+];
+
+// STATE
+let state={currentWeek:0,done:{},notes:{}};
+try{const s=localStorage.getItem('trios');if(s)state=JSON.parse(s);}catch(e){}
+function save(){try{localStorage.setItem('trios',JSON.stringify(state));}catch(e){}}
+function sessionKey(wi,di){return wi+'-'+di;}
+
+// TOTAL SESSIONS (excluding rest days)
+function totalSessions(){let n=0;WEEKS.forEach((w,wi)=>w.days.forEach((d,di)=>{if(d.t!=='rest')n++;}));return n;}
+function doneSessions(){return Object.keys(state.done).filter(k=>state.done[k]).length;}
+
+// BUILD TABS
+const tabsEl=document.getElementById('week-tabs');
+WEEKS.forEach((w,i)=>{
+  const btn=document.createElement('button');
+  btn.className='wtab'+(i===state.currentWeek?' active':'');
+  btn.textContent=w.label;
+  btn.onclick=()=>{state.currentWeek=i;save();renderWeek();tabsEl.querySelectorAll('.wtab').forEach((t,j)=>t.classList.toggle('active',j===i));};
+  tabsEl.appendChild(btn);
+});
+
+function renderWeek(){
+  const wk=WEEKS[state.currentWeek];
+  const list=document.getElementById('day-list');
+  list.innerHTML='';
+
+  // banner
+  const banner=document.createElement('div');
+  banner.className='wk-header';
+  banner.style.background=wk.color;
+  banner.innerHTML=`<h2>${wk.title} <span style="font-size:11px;font-weight:400;opacity:.8">${wk.vol}</span></h2><p>${wk.note}</p>`;
+  list.appendChild(banner);
+
+  wk.days.forEach((day,di)=>{
+    const key=sessionKey(state.currentWeek,di);
+    const isDone=!!state.done[key];
+    const noteVal=state.notes[key]||'';
+
+    const card=document.createElement('div');
+    card.className='day-card';
+
+    const hdr=document.createElement('div');
+    hdr.className='day-hdr';
+    hdr.innerHTML=`
+      <span class="day-tag tag-${day.t}">${day.t}</span>
+      <div class="day-info">
+        <div class="day-name">${day.day}</div>
+        <div class="day-subtitle">${day.sub}</div>
+      </div>
+      ${day.t!=='rest'?`<div class="day-check ${isDone?'done':''}" id="chk-${key}" onclick="toggleDone('${key}',event)">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>`:''}
+      <div class="day-chevron" id="chv-${key}">▾</div>
+    `;
+    hdr.onclick=(e)=>{
+      if(e.target.closest('.day-check'))return;
+      const body=document.getElementById('body-'+key);
+      const chv=document.getElementById('chv-'+key);
+      const open=body.classList.contains('open');
+      body.classList.toggle('open',!open);
+      chv.classList.toggle('open',!open);
+    };
+    card.appendChild(hdr);
+
+    const body=document.createElement('div');
+    body.className='day-body';
+    body.id='body-'+key;
+
+    if(day.lines.length){
+      const sl=document.createElement('div');sl.className='section-lbl';sl.textContent='Session';body.appendChild(sl);
+      day.lines.forEach(l=>{const d=document.createElement('div');d.className='line';d.textContent=l;body.appendChild(d);});
+    }
+    if(day.ex&&day.ex.length){
+      const sl=document.createElement('div');sl.className='section-lbl';sl.textContent=day.exLbl||'Exercises';body.appendChild(sl);
+      day.ex.forEach(e=>{const d=document.createElement('div');d.className='ex-item';d.textContent=e;body.appendChild(d);});
+    }
+
+    // notes
+    const nl=document.createElement('div');nl.className='section-lbl';nl.textContent='My notes';body.appendChild(nl);
+    const ta=document.createElement('textarea');
+    ta.className='notes-area';ta.placeholder='How did this session go? Any pain, times, feelings...';
+    ta.value=noteVal;ta.rows=3;
+    body.appendChild(ta);
+    const sb=document.createElement('button');sb.className='save-btn';sb.textContent='Save note';
+    const sh=document.createElement('div');sh.className='saved-hint';sh.id='hint-'+key;
+    sb.onclick=()=>{state.notes[key]=ta.value;save();sh.textContent='Saved ✓';setTimeout(()=>sh.textContent='',2000);renderNotes();};
+    body.appendChild(sb);body.appendChild(sh);
+
+    card.appendChild(body);
+    list.appendChild(card);
+  });
+  updateBadge();
+}
+
+function toggleDone(key,e){
+  e.stopPropagation();
+  state.done[key]=!state.done[key];
+  save();
+  const el=document.getElementById('chk-'+key);
+  if(el)el.className='day-check'+(state.done[key]?' done':'');
+  updateBadge();
+  renderProgress();
+}
+
+function updateBadge(){
+  const pct=totalSessions()>0?Math.round(doneSessions()/totalSessions()*100):0;
+  document.getElementById('progress-badge').textContent=pct+'%';
+}
+
+// PROGRESS
+function renderProgress(){
+  const tot=totalSessions(),done=doneSessions(),pct=tot>0?Math.round(done/tot*100):0;
+  const sg=document.getElementById('stat-grid');
+  sg.innerHTML=`
+    <div class="stat-box"><div class="stat-val">${done}</div><div class="stat-lbl">Sessions done</div></div>
+    <div class="stat-box"><div class="stat-val">${tot-done}</div><div class="stat-lbl">Sessions left</div></div>
+    <div class="stat-box"><div class="stat-val">${pct}%</div><div class="stat-lbl">Plan complete</div></div>
+    <div class="stat-box"><div class="stat-val">${Object.keys(state.notes).filter(k=>state.notes[k]).length}</div><div class="stat-lbl">Notes logged</div></div>
+  `;
+  const pw=document.getElementById('prog-weeks');
+  pw.innerHTML='';
+  WEEKS.forEach((wk,wi)=>{
+    const wDays=wk.days.filter(d=>d.t!=='rest');
+    const wDone=wDays.filter((d,di)=>{
+      const actualDi=wk.days.indexOf(d);
+      return !!state.done[sessionKey(wi,actualDi)];
+    }).length;
+    const wPct=wDays.length>0?Math.round(wDone/wDays.length*100):0;
+    const pc=document.createElement('div');pc.className='prog-card';
+    pc.innerHTML=`
+      <div class="prog-title">${wk.label} — ${wk.title}</div>
+      <div class="prog-bar-wrap"><div class="prog-bar" style="width:${wPct}%;background:${wk.color}"></div></div>
+      <div class="prog-meta"><span>${wDone}/${wDays.length} sessions</span><span>${wPct}%</span></div>
+    `;
+    pw.appendChild(pc);
+  });
+}
+
+// NOTES
+function renderNotes(){
+  const nl=document.getElementById('notes-list');
+  nl.innerHTML='';
+  const entries=[];
+  WEEKS.forEach((wk,wi)=>wk.days.forEach((day,di)=>{
+    const key=sessionKey(wi,di);
+    if(state.notes[key])entries.push({key,wk,day,wi,di,note:state.notes[key]});
+  }));
+  if(!entries.length){nl.innerHTML='<div class="empty-state">No notes yet.<br>Complete a session and add your thoughts.</div>';return;}
+  entries.forEach(e=>{
+    const c=document.createElement('div');c.className='note-entry';
+    c.innerHTML=`
+      <div class="note-head">
+        <div class="note-day"><span class="day-tag tag-${e.day.t}" style="font-size:9px;margin-right:6px">${e.day.t}</span>${e.wk.label} · ${e.day.day}</div>
+      </div>
+      <div class="note-text">${e.note}</div>
+    `;
+    nl.appendChild(c);
+  });
+}
+
+// VIEW SWITCHING
+function switchView(view,btn){
+  document.querySelectorAll('[id^="view-"]').forEach(v=>v.style.display='none');
+  document.getElementById('view-'+view).style.display='flex';
+  document.querySelectorAll('.bnav-item').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  if(view==='progress')renderProgress();
+  if(view==='notes')renderNotes();
+}
+
+renderWeek();
+updateBadge();
+</script>
+</body>
+</html>
